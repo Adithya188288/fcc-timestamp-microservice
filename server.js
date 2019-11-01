@@ -26,10 +26,11 @@ app.get("/api/hello", function(req, res) {
 
 // api route for the project
 app.get("/api/timestamp/:date_string?", function(req, res) {
-  const invalidDate = { unix: null, utc: "Invalid Date" };
+  const invalidDate = { error:"Invalid Date" };
   if (req.params.date_string === undefined) {
-    const tempDate = new Date();
-    req.params.date_string = tempDate.toISOString().slice(0, 10);
+    const tempDate = new Date(Date.now());
+    const resultToSend = {unix:Number(tempDate.getTime()),utc:tempDate.toUTCString()}
+    return res.send(resultToSend)
   }
 
   console.log(req.params.date_string);
@@ -41,7 +42,7 @@ app.get("/api/timestamp/:date_string?", function(req, res) {
     }
 
     const resultToSend = {
-      unix: newDate.getTime(),
+      unix: Number(newDate.getTime()),
       utc: newDate.toUTCString()
     };
     return res.send(resultToSend);
@@ -49,12 +50,11 @@ app.get("/api/timestamp/:date_string?", function(req, res) {
     const unixNumber = Number(req.params.date_string);
     if (isNaN(unixNumber)) return res.send(invalidDate);
 
-    let unix = unixNumber * 1000;
 
-    const newDate = new Date(unix);
-    console.log(newDate);
+    const newDate = new Date(unixNumber);
+  
     const resultToSend = {
-      unix: unix,
+      unix: unixNumber,
       utc: newDate.toUTCString()
     };
     return res.send(resultToSend);
@@ -67,16 +67,3 @@ var PORT = process.env.PORT || 3000;
 var listener = app.listen(PORT, function() {
   console.log("Your app is listening on port " + listener.address().port);
 });
-
-const validateDateInUnix = date => {
-  const schema = joi.date().timestamp("unix");
-
-  return schema.validate(date);
-};
-
-const validateDateInIso = date => {
-  console.log(date);
-  const schema = joi.date().iso();
-
-  return schema.validate(date);
-};
